@@ -667,7 +667,34 @@
 
   /* --------------------------------------------------------------- boot + sync */
 
+  // Safety net: a section that lost (or never got) its attribute in Webflow is tagged here by class.
+  // Hero is excluded on purpose: it sits above the fold and must be hidden by the head CSS from first paint.
+  var BY_CLASS = {
+    keypoints_section: "keypoints", signs_section: "signs", stats_section: "stats", about_stats_section: "stats",
+    causes_section: "split", about_values_section: "split", why_section: "split", services_why_section: "split",
+    services_section: "cards", conditions_section: "cards", approach_section: "cards", benefits_section: "cards",
+    needs_section: "cards", resources_section: "cards", products_section: "cards",
+    steps_setion: "steps", steps_section: "steps", process_section: "steps", timeline_section: "steps",
+    proof_section: "proof", quote_section: "quote", quiz_section: "quiz",
+    discover_section: "discover", about_discover_section: "discover",
+    about_journey_section: "story", about_team_section: "story", about_difference_section: "story",
+    about_success_section: "story", experience_section: "story", services_experience_section: "story",
+    drive_section: "story", partner_section: "story", expect_section: "story", visit_section: "story",
+    faq_section: "faq", testimonials_section: "testimonials", cta_section: "cta",
+    contact_section: "form", time_section: "form", intake_section: "form",
+    "before-after_section": "compare", measure_section: "compare", blog_section: "list",
+    home_appointment_setion: "home", home_welcome_setion: "home", home_results_setion: "home", home_care_section: "home"
+  };
+
+  function tagByClass() {
+    $$("section:not([data-animation-trigger])").forEach(function (s) {
+      var t = BY_CLASS[(s.className || "").split(/\s+/)[0]];
+      if (t) s.setAttribute("data-animation-trigger", t);
+    });
+  }
+
   function boot() {
+    tagByClass();
     Object.keys(inits).forEach(function (k) {
       inits[k]();
     });
