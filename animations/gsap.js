@@ -268,8 +268,9 @@
     var trusted = rec.checks > 0; // first check may run before layout above has settled
     rec.checks++;
     var r = rec.root.getBoundingClientRect();
+    var atBottom = W.scrollY + W.innerHeight >= doc.documentElement.scrollHeight - 2;
     if (trusted && r.bottom <= 0) settle(rec, true);
-    else if (r.top < W.innerHeight * rec.frac && r.bottom > 0) settle(rec, false);
+    else if (r.bottom > 0 && (r.top < W.innerHeight * rec.frac || (atBottom && r.top < W.innerHeight))) settle(rec, false);
   }
 
   function poll() {
@@ -297,7 +298,7 @@
     pending.push(rec);
     rec.st = ScrollTrigger.create({
       trigger: root,
-      start: start,
+      start: "clamp(" + start + ")", // last sections on short pages can never reach the line otherwise
       onEnter: function () {
         settle(rec, false);
       },
