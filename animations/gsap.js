@@ -351,22 +351,6 @@
     revealSectionOnScroll(root, tl, opts.start);
   }
 
-  // Hero builds after webfonts settle (3s cap) so the late font swap cannot shift the revealed hero.
-  function afterFonts(fn) {
-    var done = false,
-      go = function () {
-        if (!done) {
-          done = true;
-          fn();
-        }
-      };
-    void doc.body.offsetHeight; // force layout so used fonts start loading
-    if (doc.fonts && doc.fonts.status === "loading") {
-      doc.fonts.ready.then(go, go);
-      setTimeout(go, 3000);
-    } else go();
-  }
-
   var inits = {};
   function trigger(name, build, opts) {
     // Self-contained: returns early when its root is not on the page.
@@ -377,8 +361,7 @@
         var run = function () {
           mount(root, build, opts);
         };
-        if (name === "hero") afterFonts(run);
-        else if (root.getBoundingClientRect().top < W.innerHeight * 1.2) run();
+        if (root.getBoundingClientRect().top < W.innerHeight * 1.2) run();
         else defer(run);
       });
     };
@@ -480,22 +463,7 @@
 
   /* ------------------------------------------------------------------- hero */
 
-  trigger("hero", function (root, tl) {
-    rise(tl, $(".gbp_wrap", root), 0);
-    riseWords(tl, $("h1", root), 0.08);
-    rise(tl, $(".hero_text", root), 0.5, "power2.out");
-    landButtons(tl, $$(".button-group .button", root), 0.72);
-    var bg = $("img.hero_img", root);
-    if (bg) {
-      quiet([bg]);
-      tl.from(bg, {
-        scale: narrow(root, 48) ? 0.92 : 1.08,
-        duration: 1.3,
-        ease: "power3.out",
-        clearProps: "transform,transition"
-      }, 0);
-    }
-  });
+  // Heroes are intentionally NOT animated: they paint immediately (head CSS excludes them from the hide rule).
 
   /* ---------------------------------------------------------- section triggers */
 
