@@ -101,15 +101,18 @@
           frag.appendChild(doc.createTextNode(" "));
           return;
         }
-        var m = doc.createElement("span"),
-          i = doc.createElement("span");
-        m.className = "word-mask";
-        m.setAttribute("aria-hidden", "true");
-        i.className = "word-inner";
-        i.textContent = p;
-        m.appendChild(i);
-        frag.appendChild(m);
-        inners.push(i);
+        // split after hyphens too ("Whole-Body"): adjacent masks keep the break opportunity
+        p.match(/[^-]+-?|-/g).forEach(function (w) {
+          var m = doc.createElement("span"),
+            i = doc.createElement("span");
+          m.className = "word-mask";
+          m.setAttribute("aria-hidden", "true");
+          i.className = "word-inner";
+          i.textContent = w;
+          m.appendChild(i);
+          frag.appendChild(m);
+          inners.push(i);
+        });
       });
       t.parentNode.replaceChild(frag, t);
     });
@@ -348,6 +351,22 @@
     revealSectionOnScroll(root, tl, opts.start);
   }
 
+  // Hero builds after webfonts settle (3s cap) so the late font swap cannot shift the revealed hero.
+  function afterFonts(fn) {
+    var done = false,
+      go = function () {
+        if (!done) {
+          done = true;
+          fn();
+        }
+      };
+    void doc.body.offsetHeight; // force layout so used fonts start loading
+    if (doc.fonts && doc.fonts.status === "loading") {
+      doc.fonts.ready.then(go, go);
+      setTimeout(go, 3000);
+    } else go();
+  }
+
   var inits = {};
   function trigger(name, build, opts) {
     // Self-contained: returns early when its root is not on the page.
@@ -358,7 +377,8 @@
         var run = function () {
           mount(root, build, opts);
         };
-        if (name === "hero" || root.getBoundingClientRect().top < W.innerHeight * 1.2) run();
+        if (name === "hero") afterFonts(run);
+        else if (root.getBoundingClientRect().top < W.innerHeight * 1.2) run();
         else defer(run);
       });
     };
@@ -542,8 +562,8 @@
   trigger("cta", function (root, tl) {
     var c = $(".cta_container", root) || root;
     riseWords(tl, $("h2,h1", c), 0);
-    rise(tl, $$(".rich-text,.sub-text,.text-size-large", c).filter(function (e) {
-      return !e.closest("h1,h2");
+    rise(tl, $$(".rich-text,.sub-text,.text-size-large,p", c).filter(function (e, _i, all) {
+      return !e.closest("h1,h2,.button") && !all.some(function (o) { return o !== e && o.contains(e); });
     }), 0.4, "power2.out", 0.08);
     landButtons(tl, $$(".button", c), 0.65);
     rise(tl, $$(".margin-top", c), 0.9, "power1.out");
@@ -683,7 +703,7 @@
     drive_section: "story", partner_section: "story", expect_section: "story", visit_section: "story",
     faq_section: "faq", testimonials_section: "testimonials", cta_section: "cta",
     contact_section: "form", time_section: "form", intake_section: "form",
-    "before-after_section": "compare", measure_section: "compare", blog_section: "list",
+    "before-after_section": "compare", measure_section: "compare", blog_section: "list", section_wrap: "story", blog_header: "story", blog_content: "article",
     home_appointment_setion: "home", home_welcome_setion: "home", home_results_setion: "home", home_care_section: "home"
   };
 
